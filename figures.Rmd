@@ -1,0 +1,426 @@
+---
+title: "How do certain characteristics affect the outcomes of animals at the Austin Animal Center?"
+author: "Stephanie Diao"
+date: "6/10/2019"
+output: html_document
+---
+
+<br><br>
+
+```{r data, message = FALSE, warning = FALSE, echo = FALSE}
+# Loading all necessary packages
+library(tidyverse)
+library(skimr)
+library(janitor)
+library(readr)
+
+# Reading in the Austin Animal Shelter dataset
+animal_shelter_data <- read_csv("data/aac_intakes_outcomes.csv")
+animal_shelter_data <- animal_shelter_data %>% 
+  filter(outcome_type != "NA")
+
+cat_data <- animal_shelter_data %>% 
+  filter(animal_type == "Cat")
+
+dog_data <- animal_shelter_data %>% 
+  filter(animal_type == "Dog")
+```
+
+<!-------- Cats -------->
+
+<!-- Figure 1 -->
+
+```{r cats-mean-time-by-color, fig.width = 14, fig.height = 10, echo = FALSE}
+# Process the data
+# We are filtering the entire dataset to get only the data on cats. 
+cat_mean_colors <- cat_data %>% 
+  # Group the data by coat color 
+  group_by(color) %>%
+  summarize(
+    # Getting the mean time spent in the shelter
+    mean = mean(time_in_shelter_days),
+    se = sd(time_in_shelter_days)/sqrt(n())
+  ) %>%
+  mutate(color = fct_reorder(factor(color), desc(mean)))
+
+# Plot
+ggplot(cat_mean_colors,
+       aes(color, mean)) +
+       geom_col(width = 0.25, fill = "#56B4E9") +
+       labs(x = "Cat Coat Color", y = "Mean Time Spent in Shelter (days)") +
+       ggtitle("Figure 1: Mean Time Spent in Shelter by Coat Color in Cats") +
+       theme(axis.text.x = element_text(angle = 90, size = 10),
+             strip.text = element_text(size = 14), 
+             plot.title = element_text(size = 28),
+             axis.title = element_text(size = 20),
+             axis.text.y = element_text(size = 12), 
+             panel.background = element_blank())
+
+# Find the Lynx Point/Tortie Point cats
+lynxpoint_tortiepoint <- cat_data %>% 
+  filter(color == "Lynx Point/Tortie Point")
+lynxpoint_tortiepoint_days <- lynxpoint_tortiepoint$time_in_shelter_days
+# Number of days = 270.034
+
+# Find the Brown Tabby/Agouti cats
+browntabby_agouti <- cat_data %>% 
+  filter(color == "Brown Tabby/Agouti")
+browntabby_agouti_days <- browntabby_agouti$time_in_shelter_days
+# Number of days = 168.1674
+```
+
+<br><br><br>
+
+<!-- Figure 2 -->
+
+```{r cats_color_counts, echo = FALSE}
+# Finding the most common colors
+cats_color_counts <- count(cat_data, vars = color)
+cats_color_counts_desc <- cats_color_counts[with(cats_color_counts, order(-n)), ]
+```
+
+
+```{r cats-common-coat-colors, fig.width = 14, fig.height = 10, echo = FALSE}
+cat_colors = c("Brown Tabby", "Black", "Black/White", "Orange Tabby", "Tortie", "Calico", "Blue Tabby", "Orange Tabby/White", "Blue", "Torbie")
+
+# Process the data
+cat_mean_colors <- cat_mean_colors %>% 
+  filter(color %in% cat_colors)
+
+ggplot(cat_mean_colors,
+       aes(color, mean)) +
+       geom_col(width = 0.95, fill = "#56B4E9") +
+       labs(x = "Ten Most Common Cat Coat Colors", y = "Mean Time Spent in Shelter (days)") +
+       ggtitle("Figure 2: Mean Time Spent in Shelter by Most Common Coat Colors in Cats") +
+       theme(axis.text.x = element_text(angle = 90, hjust = 0, size = 12),
+             strip.text = element_text(size = 14), 
+             plot.title = element_text(size = 28),
+             axis.title = element_text(size = 20),
+             axis.text.y = element_text(size = 12),
+             panel.background = element_blank())  
+```
+
+<br><br><br>
+
+<!-- Figure 3 -->
+
+```{r cats-mean-time-by-breed, fig.height = 10, fig.width = 14, echo = FALSE}
+cat_mean_breeds <- animal_shelter_data %>% 
+  filter(animal_type == "Cat") %>% 
+  group_by(breed) %>%
+  summarize(
+    mean = mean(time_in_shelter_days),
+    se = sd(time_in_shelter_days)/sqrt(n())
+  ) %>%
+  mutate(breed = fct_reorder(factor(breed), desc(mean)))
+
+ggplot(cat_mean_breeds, 
+       aes(breed, mean)) +
+       geom_col(width = 0.75, fill = "#2E8B57") +
+       labs(x = "Cat Breed", y = "Mean Time Spent in Shelter (days)") +
+       ggtitle("Figure 3: Mean Time Spent in Shelter by Breed in Cats") +
+       theme(axis.text.x = element_text(angle = 90, hjust = 0, size = 12),
+             strip.text = element_text(size = 14), 
+             plot.title = element_text(size = 28),
+             axis.title = element_text(size = 20),
+             axis.text.y = element_text(size = 12), 
+             panel.background = element_blank())
+
+# Find the Chartreux Mix
+chartreux_mix <- cat_data %>% 
+  filter(breed == "Chartreux Mix")
+chartreux_mix_days <- chartreux_mix$time_in_shelter_days
+```
+
+<!-- Figure 4 -->
+
+```{r cats_breed_counts, echo = FALSE}
+# Finding the 10 most common breeds
+cats_breed_counts <- count(cat_data, vars = breed)
+cats_breed_counts_desc <- cats_breed_counts[with(cats_breed_counts, order(-n)), ]
+```
+
+<br><br><br>
+
+```{r cats-common-breeds, fig.height = 10, fig.width = 14, echo = FALSE}
+cat_breeds = c("Domestic Shorthair", "Domestic Medium Hair", "Domestic Longhair", "Domestic Shorthair Mix", "Domestic Medium Hair Mix", "Domestic Longhair Mix", "Siamese", "Maine Coon", "American Shorthair", "British Shorthair", "Russian Blue Mix", "Maine Coon Mix", "Siamese Mix")
+
+cat_mean_breeds <- cat_mean_breeds %>% 
+  filter(breed %in% cat_breeds)
+
+ggplot(cat_mean_breeds, 
+       aes(breed, mean)) +
+       geom_col(width = 0.75, fill = "#2E8B57") +
+       labs(x = "Ten Most Common Cat Breeds", y = "Mean Time Spent in Shelter (days)") +
+       ggtitle("Figure 4: Mean Time Spent in Shelter by Breed in Cats") +
+       theme(axis.text.x = element_text(angle = 90, hjust = 0, size = 12),
+             strip.text = element_text(size = 14), 
+             plot.title = element_text(size = 28),
+             axis.title = element_text(size = 20),
+             axis.text.y = element_text(size = 12), 
+             panel.background = element_blank(), 
+             plot.background = element_blank())
+```
+
+<br><br><br>
+
+<!-------- Dogs -------->
+
+<!-- Figure 5 -->
+
+```{r dogs-mean-time-by-color, fig.width = 14, fig.height = 10, echo = FALSE}
+# Process the data
+# We are filtering the entire dataset to get only the data on cats. 
+dog_mean_colors <- dog_data %>% 
+  # Group the data by coat color 
+  group_by(color) %>%
+  summarize(
+    # Getting the mean time spent in the shelter
+    mean = mean(time_in_shelter_days),
+    se = sd(time_in_shelter_days)/sqrt(n())
+  ) %>%
+  mutate(color = fct_reorder(factor(color), desc(mean)))
+
+ggplot(dog_mean_colors,
+       aes(color, mean)) +
+       geom_col(width = 0.25, fill ="#56B4E9") +
+       labs(x = "Dog Coat Color", y = "Mean Time Spent in Shelter (days)") +
+       ggtitle("Figure 5: Mean Time Spent in Shelter by Coat Color in Dogs") +
+       theme(axis.text.x = element_text(angle = 90, size = 10),
+             strip.text = element_text(size = 14), 
+             plot.title = element_text(size = 28),
+             axis.title = element_text(size = 20),
+             axis.text.y = element_text(size = 12), 
+             panel.background = element_blank())
+
+# Find the Red/Red colored dogs
+red_red <- dog_data %>% 
+  filter(color == "Red/Red")
+```
+
+<br><br><br>
+
+<!-- Figure 6 -->
+
+```{r dogs_color_counts, echo = FALSE}
+# Finding the most common colors
+dogs_color_counts <- count(dog_data, vars = color)
+dogs_color_counts_desc <- dogs_color_counts[with(dogs_color_counts, order(-n)), ]
+```
+
+```{r dogs-popular-coat-colors, fig.width = 14, fig.height = 10, echo = FALSE}
+dog_colors = c("Black/White", "Black", "Brown/White", "Tan/White", "White", "Tan", "Tricolor",
+           "Black/Tan", "Brown", "White/Black")
+
+# Process the data
+dog_mean_colors <- dog_mean_colors %>% 
+  filter(color %in% dog_colors)
+
+ggplot(dog_mean_colors,
+       aes(color, mean)) +
+       geom_col(width = 0.95, fill = "#56B4E9") +
+       labs(x = "10 Most Common Dog Coat Colors", y = "Mean Time Spent in Shelter (days)") +
+       ggtitle("Figure 6: Mean Time Spent in Shelter by Coat Color in Dog") +
+       theme(axis.text.x = element_text(angle = 90, size = 10),
+             strip.text = element_text(size = 14), 
+             plot.title = element_text(size = 28),
+             axis.title = element_text(size = 20),
+             axis.text.y = element_text(size = 12), 
+             panel.background = element_blank())
+```
+
+<br><br><br>
+
+<!-- Figure 7 -->
+
+```{r dogs-mean-time-by-breed, fig.height = 16, fig.width = 20, echo = FALSE}
+dog_mean_breeds <- dog_data %>% 
+  group_by(breed) %>%
+  summarize(
+    mean = mean(time_in_shelter_days),
+    se = sd(time_in_shelter_days)/sqrt(n())
+  ) %>%
+  mutate(breed = fct_reorder(factor(breed), desc(mean)))
+
+ggplot(dog_mean_breeds, 
+       aes(breed, mean)) +
+       geom_col(width = 0.75, fill = "#2E8B57") +
+       labs(x = "Dog Breed", y = "Mean Time Spent in Shelter (days)") +
+       ggtitle("Figure 7: Mean Time Spent in Shelter by Breed in Dogs") +
+       theme(axis.text.x = element_text(angle = 90, hjust = 0, size = 6),
+             strip.text = element_text(size = 14), 
+             plot.title = element_text(size = 28),
+             axis.title = element_text(size = 20),
+             axis.text.y = element_text(size = 12), 
+             panel.background = element_blank())
+```
+
+<br><br><br>
+
+<!--  Figure 8 -->
+
+```{r dogs_breed_counts, echo = FALSE}
+# Finding the most common colors
+dogs_breed_counts <- count(dog_data, vars = breed)
+dogs_breed_counts_desc <- dogs_breed_counts[with(dogs_breed_counts, order(-n)), ]
+```
+
+```{r dogs-popular-breeds, fig.height = 10, fig.width = 20, echo = FALSE}
+dog_breeds = c("Pit Bull Mix", "Chihuahua Shorthair Mix", "Labrador Retriever Mix", "German Shepherd Mix", "Australian Cattle Dog Mix", "Dachshund Mix", "Boxer Mix", "Border Collie Mix", "Miniature Poodle Mix", "Catahoula Mix")
+
+dog_mean_breeds <- dog_mean_breeds %>% 
+  filter(breed %in% dog_breeds)
+
+ggplot(dog_mean_breeds, 
+       aes(breed, mean)) +
+       geom_col(width = 0.95, fill = "#2E8B57") +
+       labs(x = "10 Most Common Dog Breeds", y = "Mean Time Spent in Shelter (days)") +
+       ggtitle("Figure 8: Mean Time Spent in Shelter by Breed in Dogs") +
+       theme(axis.text.x = element_text(angle = 90, hjust = 0, size = 12),
+             strip.text = element_text(size = 14), 
+             plot.title = element_text(size = 28),
+             axis.title = element_text(size = 20),
+             axis.text.y = element_text(size = 12), 
+             panel.background = element_blank(), 
+             plot.background = element_blank())
+```
+
+<br><br><br>
+
+<!-------- All Animals -------->
+
+<!-- Figure 9 -->
+
+```{r animals-by-year-bar, echo = FALSE}
+animal_shelter_data <- animal_shelter_data %>% 
+  group_by(intake_year) 
+animal_counts <- count(animal_shelter_data, vars = animal_type)
+
+ggplot(animal_counts,
+       aes(intake_year, n)) +
+       geom_col(aes(fill = vars)) +
+       labs(x = "Year animal was taken into shelter", y = "Number of Animals",
+            fill = "Type of Animal") +
+       ggtitle("Figure 9: Number of Animals Taken in by Year") +
+       theme(panel.background = element_blank())
+
+others <- animal_shelter_data %>% 
+  filter(animal_type == "Other")
+```
+
+<br><br><br>
+
+<!-- Figure 10 -->
+
+```{r animals-by-year-line, echo = FALSE}
+ggplot(animal_counts,
+       aes(intake_year, n)) +
+       geom_point(aes(shape = vars, color = vars)) +
+       geom_line(aes(color = vars)) +
+       labs(x = "Year animal was taken into shelter", y = "Number of Animals Taken into the Shelter",
+            fill = "Type of Animal", shape = "Type of Animal", color = "Type of Animal") +
+       ggtitle("Figure 10: Number of Animals Taken in by Year") +
+       theme(panel.background = element_blank())
+```
+
+<br><br><br>
+
+<!-------- Adoption -------->
+
+```{r adoption-data, echo = FALSE}
+# Get adoption data for cats and dogs
+adoption_data <- animal_shelter_data %>% 
+  filter(outcome_type == "Adoption")
+
+cat_adoption_data <- adoption_data %>% 
+  filter(animal_type == "Cat") 
+
+dog_adoption_data <- adoption_data %>% 
+  filter(animal_type == "Dog")
+```
+
+<!-- Figure 11 -->
+ 
+```{r cat_adoption_top_five_colors, echo = FALSE}
+cat_colors_top_five = c("Brown Tabby", "Black", "Black/White", "Orange Tabby", "Tortie")
+
+cat_adoption_data <- cat_adoption_data %>% 
+  filter(color %in% cat_colors_top_five)
+
+cat_adoption_counts <- cat_adoption_data %>% 
+  group_by(outcome_year, color)
+
+cat_adoption_counts <- count(cat_adoption_counts, vars = outcome_type)
+
+ggplot(cat_adoption_counts, 
+       aes(outcome_year, n)) +
+       geom_point(aes(color = color, shape = color)) +
+       geom_line(aes(color = color)) +
+       labs(x = "Year cat was adopted", y = "Number of cats adopted", shape = "5 Most Common Coat Colors",
+            color = "5 Most Common Coat Colors") +
+       ggtitle("Figure 11: Number of Cats Adopted by Year") +
+       scale_color_manual(labels = c("Black", "Black/White", "Brown Tabby", "Orange Tabby", "Tortie"),
+                          values = c("black", "#a9a9a9", "#654321", "orange", "#d4aa8e")) +
+       theme(panel.background = element_blank())
+```
+
+<br><br><br>
+
+<!-- Figure 12 -->
+
+```{r dog_adoption_top_five_breeds, echo = FALSE}
+dog_breeds_top_five = c("Pit Bull Mix", "Chihuahua Shorthair Mix", "Labrador Retriever Mix", "German Shepherd Mix", "Australian Cattle Dog Mix")
+
+dog_adoption_data <- dog_adoption_data %>% 
+  filter(breed %in% dog_breeds_top_five)
+
+dog_adoption_counts <- dog_adoption_data %>% 
+  group_by(outcome_year, breed)
+
+dog_adoption_counts <- count(dog_adoption_counts, vars = outcome_type)
+
+ggplot(dog_adoption_counts, 
+       aes(outcome_year, n)) +
+       geom_point(aes(color = breed, shape = breed)) +
+       geom_line(aes(color = breed)) +
+       labs(x = "Year dog was adopted", y = "Number of dogs adopted", shape = "5 Most Common Dog Breeds",
+            color = "5 Most Common Dog Breeds") + 
+       ggtitle("Figure 12: Number of Dogs Adopted by Year") +
+       scale_color_manual(labels = c("Australian Cattle Dog Mix", "Chihuahua Shorthair Mix", 
+                                     "German Shepherd Mix", "Labrador Retriever Mix", "Pit Bull Mix"),
+                          values = c("black", "#a9a9a9", "#654321", "orange", "#d4aa8e")) +
+       theme(panel.background = element_blank())
+```
+
+<br><br><br>
+
+<!-- Figure 13 -->
+
+```{r tnr, echo = FALSE}
+adoptions_by_sex <- animal_shelter_data %>% 
+  group_by(sex_upon_intake) %>% 
+  filter(sex_upon_intake != "NA" & sex_upon_intake != "Unknown")
+
+adoptions_by_sex <- adoptions_by_sex %>% 
+  group_by(intake_year, sex_upon_intake)
+
+adoptions_by_sex <- count(adoptions_by_sex, vars = sex_upon_intake)
+
+ggplot(adoptions_by_sex, 
+       aes(intake_year, n)) +
+       geom_point(aes(color = sex_upon_intake, shape = sex_upon_intake)) +
+       geom_line(aes(color = sex_upon_intake)) +
+       labs(x = "Year Taken into the Shelter", y = "Number of cats brought into the shelter", 
+            color = "Sex Upon Intake", shape = "Sex Upon Intake") +
+       ggtitle("Figure 13: Number of Cats Brought into the Shelter by Year") +
+       theme(panel.background = element_blank())
+```
+
+<br><br><br><br>
+
+-------------------------------------------------------------------------------------------------------------
+
+The Austin Animal Center Shelter Intakes and Outcomes Dataset is from Kaggle.com, and it was uploaded by Aaron Schlegel. 
+
+Link to the dataset:
+https://www.kaggle.com/aaronschlegel/austin-animal-center-shelter-intakes-and-outcomes#aac_intakes_outcomes.csv
